@@ -1,0 +1,61 @@
+## 第五章 DataStream API
+
+* 基本流程
+  * 设置执行环境
+    * 由StreamExecutionEnvironment来表示，通过getExectionEnvironment()来获取执行环境
+    * 根据调用时的上下文，该方法可能会返回一个本地或者远程环境
+    * 可以对执行环境提供很多配置，例如设置程序并行度，启用容错，设置事件时间语意
+  * 读取输入流
+  * 应用转换
+  * 输出结果
+  * 执行
+    * Flink程序都是通过延迟计算的方式执行，只有在调用execute()方法时，才会触发程序执行
+* 转换操作
+  * 基本转换：作用于单个事件
+    * Map：通过调用DataStream.map()可以指定map转换产生一个新的DataStream
+    * Filter：利用一个作用在流中每条输入事件上的布尔条件来决定事件的去留
+    * FlatMap：可以多每个输入事件产生零个、一个或者是多个输出事件
+  * 基于KeyedStream的转换：针对相同键值事件
+    * KeyBy：通过指定键值的方式将一个DataStream转化为KeyedStream
+    * 滚动聚合：作用于KeyedStream，将生成一个包含聚合结果的DataStream
+      * sum()
+      * min()
+      * max()
+      * minBy()：滚动计算输入流中迄今最小值，返回该值所在的事件
+      * maxBy()：滚动计算输入流中迄今最大值，返回该值所在的事件
+    * Reduce：将一个ReduceFunction应用在一个KeyedStream上，每个到来事件都会和Reduce结果进行一次组合，从而产生一个新的DataStream
+  * 多流转换：将多条数据流合并或者是将单条数据流拆分
+    * Union：可以合并两条或多条类型相同的DataStream，生成一个新的类型相同的DataStream
+    * Connect,coMap,coFlatMap：DataStream.connect()方法接收一个DataStream并返回一个ConnectedStream对象
+    * Split和Select：将输入流分割成两个或多条类型和输入流相同的输出流
+  * 分发转换：对流中的事件进行重新组织
+    * 随机：DataStream.shuffle()
+    * 轮流：rebalance()
+    * 重调：rescale()
+    * 广播：broadcast()
+    * 全局：global()
+    * 自定义：partitionCustom()
+* 设置并行度
+  * 环境的并行度是根据应用启动时上下文自动初始化，若在本地执行环境中运行，并行度会设置为CPU的线程数目；如果是Flink集群运行，设置为集群默认并行度
+* 类型
+  * 支持的数据类型
+    * 原始类型
+    * Java和Scala元组
+    * POJO
+    * 一些特殊类型
+  * 为数据类型创建类型信息
+    * Flink类型系统的核心类是TypeInformation，它为系统生成序列化器和比较器提供了必要的信息
+  * 显示提供类型信息
+    * 通过实现ResultTypeQueryable接口来扩展函数，在其中提供返还类型的TypeInformation
+    * 在定义Dataflow时使用Java DataStream API中的returns()方法来显示指定某算子的返还类型
+* 定义键值和引用字段
+  * 字段位置
+  * 字段表达式
+  * 键值选择器
+* 实现函数
+  * 函数类
+    * Flink中所有用户自定义函数的接口都是以接口或者是抽象类的形式对外暴露
+  * Lambda函数
+  * 富函数
+    * open()是富函数中的初始化方法，在每个任务首次调用转换方法前调用一次
+    * close()作为函数的终止方法，会在每个任务最后一次调用转换方法后调用一次，用于清理和释放资源
