@@ -37,5 +37,39 @@
   ```
 
   * 这些核心依赖需要有provided的scope，这意味着这些依赖会编译，但是不会打包进最终的jar文件中；如果将provided去除，可能会导致得到的JAR会特别的大
-  * 为了能够在Intellij上运行文件，需要**把provided给去除**，否则会导致运行时报NoClassDefFountError
 
+  * 为了能够在Intellij上运行文件，需要添加如下的依赖
+
+    ```java
+    <!-- This profile helps to make things run out of the box in IntelliJ -->
+        <!-- Its adds Flink's core classes to the runtime class path. -->
+        <!-- Otherwise they are missing in IntelliJ, because the dependency is 'provided' -->
+        <profiles>
+            <profile>
+                <id>add-dependencies-for-IDEA</id>
+    
+                <activation>
+                    <property>
+                        <name>idea.version</name>
+                    </property>
+                </activation>
+    
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.flink</groupId>
+                        <artifactId>flink-java</artifactId>
+                        <version>${flink.version}</version>
+                        <scope>compile</scope>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.flink</groupId>
+                        <artifactId>flink-streaming-java_${scala.binary.version}</artifactId>
+                        <version>${flink.version}</version>
+                        <scope>compile</scope>
+                    </dependency>
+                </dependencies>
+            </profile>
+        </profiles>
+    ```
+
+    
